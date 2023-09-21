@@ -20,14 +20,24 @@
 (use-package avy
   :ensure t
   :demand t
-  :bind (("C-c j" . avy-goto-line)
-         ("s-j"   . avy-goto-char-timer)))
+  :bind (("C-c j" . avy-goto-line)))
+
+(evil-define-key 'normal 'global (kbd "f") 'avy-goto-char-2)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;   Power-ups: Embark and Consult
+;;;   Power-ups: Embark and Consult and Perspective
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Perspective
+(use-package perspective
+  :ensure t
+  :custom
+  (persp-mode-prefix-key (kbd "C-c M-p"))
+  :init
+  (persp-mode))
 
 ;; Consult: Misc. enhanced commands
 (use-package consult
@@ -39,7 +49,11 @@
          ("C-s" . consult-line))    ; orig. isearch
   :config
   ;; Narrowing lets you restrict results to certain groups of candidates
-  (setq consult-narrow-key "<"))
+  (setq consult-narrow-key "<")
+  ;; Set consult buffer source to persp-consult-source
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (add-to-list 'consult-buffer-sources persp-consult-source))
+
 
 (use-package embark
   :ensure t
@@ -93,11 +107,18 @@
   :ensure t
   :init
   (global-corfu-mode)
+  (corfu-history-mode)
+  :custom
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-auto-prefix 3)
+  (corfu-auto-delay 0.3)
   :bind
   (:map corfu-map
-        ("SPC" . corfu-insert-separator)
+        ("M-SPC" . corfu-insert-separator)
         ("C-n" . corfu-next)
-        ("C-p" . corfu-previous)))
+        ("C-p" . corfu-previous)
+        ("S-<return>" . corfu-insert)))
 
 ;; Part of corfu
 (use-package corfu-popupinfo
@@ -133,38 +154,6 @@
   :config
   (setq completion-styles '(orderless)))
 
-;; Doom stuff
-
-;; Doom modeline
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1))
-
-;; Doom theme
-(use-package doom-themes
-  :ensure t
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  ;(doom-themes-neotree-config)
-  ;; or for treemacs users
-  ;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-  ;(doom-themes-treemacs-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
-
-;; Icons
-;; install with M-x all-the-icons-install-fonts
-(use-package all-the-icons
-    :ensure t
-    :if (display-graphic-p))
-
 ;; Rainbow delimiters
 (use-package rainbow-delimiters
   :ensure t
@@ -181,3 +170,15 @@
 
 ;; Make copy/paste work with the system clipboard
 (setq x-select-enable-clipboard t)
+
+;; Affe, fuzzy find
+(use-package affe
+  :ensure t
+  :config
+  ;; Manual preview key for `affe-grep'
+  (consult-customize affe-grep :preview-key "M-.")
+  (defun affe-orderless-regexp-compiler (input _type _ignorecase)
+    (setq input (orderless-pattern-compiler input))
+    (cons input (apply-partially #'orderless--highlight input)))
+  (setq affe-regexp-compiler #'affe-orderless-regexp-compiler))
+

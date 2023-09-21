@@ -41,7 +41,9 @@
           (json-mode . json-ts-mode)
           (css-mode . css-ts-mode)
           (python-mode . python-ts-mode)
-          (go-mode . go-ts-mode)))
+          (go-mode . go-ts-mode)
+          (go-mod-mode . go-mod-ts-mode)))
+
   :hook
   ;; Auto parenthesis matching
   ((prog-mode . electric-pair-mode)))
@@ -137,3 +139,68 @@
     (setq projectile-project-search-path '("~/code")))
   (setq projectile-switch-project-action #'projectile-dired))
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Web-mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package web-mode
+  :ensure t
+  :mode ("\\.html\\'" "\\.css\\'" "\\.js\\'" "\\.jsx\\'" "\\.svelte\\'")
+  :config
+  (setq web-mode-enable-current-element-highlight t)
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-auto-quoting t)
+  (add-hook 'web-mode-hook
+            (lambda ()
+              (setq indent-region-function 'web-mode-buffer-indent))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Auto switch modes
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Automatically set typescript-mode and start eglot for .ts files 
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(add-hook 'typescript-ts-mode 'eglot-ensure)
+
+(defun setup-svelte-mode ()
+  "Hooks for Svelte mode."
+  (setq web-mode-enable-auto-indentation nil))
+
+(add-to-list 'auto-mode-alist '("\\.svelte\\'" . web-mode))
+(add-hook 'web-mode-hook
+          (lambda ()
+            (when (string-equal "svelte" (file-name-extension buffer-file-name))
+              (setup-svelte-mode))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Copilot
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package copilot
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :ensure t
+  :hook (prog-mode . copilot-mode)
+  :bind (("C-f" . 'copilot-complete-or-accept)
+         :map copilot-completion-map
+         ("<right>" . 'copilot-accept-completion)
+         ("C-g" . 'copilot-clear-overlay)
+         ("C-S-f" . 'copilot-next-completion)
+         ("C-S-g" . 'copilot-previous-completion)))
+ 
+(defun copilot-complete-or-accept ()
+  "Command that either triggers a completion or accepts one if one
+is available."
+  (interactive)
+  (if (copilot--overlay-visible)
+      (progn
+        (copilot-accept-completion))
+    (copilot-complete)))

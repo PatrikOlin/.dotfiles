@@ -23,4 +23,4 @@
                               (gofmt-before-save)
                               (eglot-code-action-organize-imports))))
 
-(add-hook 'go-mode-hook 'eglot-ensure)
+(add-hook 'go-ts-mode-hook 'eglot-ensure)
