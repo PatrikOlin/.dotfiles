@@ -1,4 +1,4 @@
-;;; Emacs Bedrock
+;;; Silver computing machine
 ;;;
 ;;; Mixin: Development tools
 
@@ -204,3 +204,30 @@ is available."
       (progn
         (copilot-accept-completion))
     (copilot-complete)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Wakatime mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package wakatime-mode
+  :ensure t
+  :init
+  (global-wakatime-mode))
+
+(setq wakatime-api-key "06fe98b5-d106-4309-a710-d08e1d8d8215")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Magit 
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun silver_computing_machine/magit-display-buffer (buffer)
+  "Display the Magit buffer in the current window."
+  (display-buffer buffer '(display-buffer-same-window)))
+
+(setq magit-display-buffer-function #'silver_computing_machine/magit-display-buffer)

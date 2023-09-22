@@ -22,8 +22,6 @@
   :demand t
   :bind (("C-c j" . avy-goto-line)))
 
-(evil-define-key 'normal 'global (kbd "f") 'avy-goto-char-2)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

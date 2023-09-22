@@ -1,4 +1,4 @@
-;;; Emacs Bedrock
+;;; silver_computing_machine
 ;;;
 ;;; Mixin: Vim emulation
 
@@ -48,6 +48,12 @@
   :config
   (global-evil-surround-mode 1))
 
+;; Evil-commentary: vim commentary
+(use-package evil-commentary
+  :ensure t
+  :config
+  (evil-commentary-mode))
+
 (global-unset-key (kbd "C-SPC"))
 ;; General.el
 (use-package general
@@ -75,14 +81,24 @@
     "al" '(avy-goto-line :which-key "goto line")
     "b" '(:ignore t :which-key "buffer")
     "bs" '(consult-buffer :which-key "consult buffer")
-    "bk" '(kill-buffer :which-key "kill buffer") 
-    "bq" '(kill-current-buffer :which-key "kill current buffer")
+    "bq" '(kill-buffer :which-key "kill buffer") 
+    "bk" '(kill-current-buffer :which-key "kill current buffer")
     "e" '(:ignore t :which-key "embark")
     "ea" '(embark-act :which-key "embark act")
     "l" '(:ignore t :which-key "lsp")
     "la" '(eglot-code-actions :which-key "eglot code actions")
     "lr" '(eglot-rename :which-key "eglot rename")
     "lf" '(eglot-format :which-key "eglot format")
+    "g" '(hydra-magit/body :which-key "hydra magit")
+    ;; "g" '(:ignore t :which-key "magit")
+    ;; "gg" '(magit :which-key "magit")
+    ;; "gs" '(magit-status :which-key "magit status")
+    ;; "gd" '(magit-diff :which-key "magit diff")
+    ;; "gl" '(magit-log :which-key "magit log")
+    ;; "gc" '(magit-commit :which-key "magit commit")
+    ;; "gp" '(magit-push :which-key "magit push")
+    ;; "gh" '(hydra-magit/body :which-key "hydra magit")
+    "t" '(hydra-text-scale/body :which-key "hydra text scale")
     "y" '(:ignore t :which-key "yank")
     "yr" '(avy-copy-region :which-key "avy copy region")
     "yl" '(avy-copy-line :which-key "avy copy line")
@@ -104,12 +120,78 @@
 (use-package hydra
   :ensure t)
 
-(defhydra hydra-text-scale (:color blue :timeout 6)
-  "Text scale: %(text-scale-mode-line)"
-  ("j" text-scale-increase "in")
-  ("k" text-scale-decrease "out")
-  ("0" (text-scale-set 0) "reset")
-  ("q" nil "quit" :color blue))
+(defhydra hydra-text-scale (:hint nil :color blue :timeout 6)
+  "
+^Text Scale^
+-------------
+_j_: in   %`text-scale-mode-amount  _r_: reset
+_k_: out  %`text-scale-mode-amount  _q_: quit
+"
+  ("j" text-scale-increase)
+  ("k" text-scale-decrease)
+  ("r" (text-scale-set 0))
+  ("q" nil))
+
+;; Hydra for magit
+(defhydra hydra-magit (:color blue :hint nil)
+  "
+^Magit:
+^-----------------------------
+^_s_: status  ^_c_: commit  ^_C_: checkout  
+^_f_: fetch   ^_P_: push    ^_p_: pull
+^_b_: blame   ^_B_: branch  ^_d_: diff
+^_g_: magit   ^_l_: log     ^_q_: quit
+"
+  ("g" magit)
+  ("s" magit-status)
+  ("c" magit-commit)
+  ("C" magit-checkout)
+  ("P" magit-push)
+  ("l" magit-log-current)
+  ("f" magit-fetch)
+  ("p" magit-pull)
+  ("b" magit-blame-addition)
+  ("B" magit-branch)
+  ("d" magit-diff)
+  ("q" nil :color red))
+
+;; Hydra for dired
+(defhydra hydra-dired (:hint nil :color pink)
+  "
+^Navigation^          ^Mark^               ^Actions^                ^Others^
+----------------------------------------------------------------------------------
+_j_: Next             _m_: Mark            _C_: Copy               _+_ : Create directory
+_k_: Previous         _u_: Unmark          _R_: Rename/move        _._ : Refresh
+_^_: Up directory     _U_: Unmark all      _D_: Delete             _q_: Quit hydra
+_f_: Find file
+
+"
+  ("j" dired-next-line)
+  ("k" dired-previous-line)
+  ("^" dired-up-directory)
+  ("f" dired-find-file)
+  
+  ("m" dired-mark)
+  ("u" dired-unmark)
+  ("U" dired-unmark-all-marks)
+  
+  ("C" dired-do-copy)
+  ("R" dired-do-rename)
+  ("D" dired-do-delete)
+  
+  ("+" dired-create-directory)
+  ("." revert-buffer)
+
+  ("q" nil :color blue))
+
+(add-hook 'dired-mode-hook
+          (lambda ()
+            (define-key dired-mode-map (kbd "s") 'hydra-dired/body)))
+
+
+;; Avy
+
+(evil-define-key 'normal 'global (kbd "f") 'avy-goto-char-2)
 
 ;; Custom Avy function that places the cursor after the search string
 (defun silver_computing_machine/avy-goto-char ()

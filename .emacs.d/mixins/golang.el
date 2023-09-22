@@ -19,8 +19,9 @@
   :mode "\\.go\\'"
   :config
   (setq gofmt-command "goimports")
-  (add-hook 'before-save-hook (lambda ()
-                              (gofmt-before-save)
-                              (eglot-code-action-organize-imports))))
+  (add-hook 'before-save-hook
+            #'gofmt-before-save
+            nil t))
 
 (add-hook 'go-ts-mode-hook 'eglot-ensure)
+
