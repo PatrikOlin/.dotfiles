@@ -231,3 +231,17 @@ is available."
   (display-buffer buffer '(display-buffer-same-window)))
 
 (setq magit-display-buffer-function #'silver_computing_machine/magit-display-buffer)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Zig 
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package zig-mode
+;;   :ensure t
+;;   :mode "\\.zig\\'"
+;;   :hook (zig-mode . eglot-ensure)
+;;   :config
+;;   (setq zig-format-on-save t))

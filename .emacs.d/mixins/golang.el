@@ -19,9 +19,7 @@
   :mode "\\.go\\'"
   :config
   (setq gofmt-command "goimports")
-  (add-hook 'before-save-hook
-            #'gofmt-before-save
-            nil t))
+  (setq on-save-gofmt t))
 
 (add-hook 'go-ts-mode-hook 'eglot-ensure)
 
