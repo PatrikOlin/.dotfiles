@@ -89,6 +89,7 @@
     "la" '(eglot-code-actions :which-key "eglot code actions")
     "lr" '(eglot-rename :which-key "eglot rename")
     "lf" '(eglot-format :which-key "eglot format")
+    "m" '(hydra-multi-cursors/body :which-key "multiple cursors")
     "g" '(hydra-magit/body :which-key "hydra magit")
     ;; "g" '(:ignore t :which-key "magit")
     ;; "gg" '(magit :which-key "magit")
@@ -187,6 +188,41 @@ _f_: Find file
 (add-hook 'dired-mode-hook
           (lambda ()
             (define-key dired-mode-map (kbd "s") 'hydra-dired/body)))
+
+;; Hydra for evil-mc and evil-multiedit
+(defhydra hydra-multi-cursors (:hint nil :color pink :timeout 6)
+  "
+^Evil-MC^             ^Evil-Multiedit^
+----------------------^-------------------
+^Cursors^             ^Regions^
+_g_: Make & Go        ^_r_: Match symbol & next
+_G_: Make & Stay      ^_R_: Match symbol & prev
+_j_: Next Line        ^_m_: Match all
+_k_: Prev Line        ^_M_: Unmark all
+_u_: Undo last cursor ^_s_: Match & next
+_U_: Undo all cursors ^_S_: Match & previous
+^ ^                   ^_RET_: Restrict region
+_q_: Quit mc          ^_Q_: Exit multiedit
+"
+  ;; evil-mc
+  ("g" evil-mc-make-and-goto-next-match)
+  ("G" evil-mc-make-cursor-here)
+  ("j" evil-mc-make-cursor-move-next-line)
+  ("k" evil-mc-make-cursor-move-prev-line)
+  ("u" evil-mc-undo-last-added-cursor)
+  ("U" evil-mc-undo-all-cursors)
+
+  ;; evil-multiedit
+  ("r" evil-multiedit-match-symbol-and-next)
+  ("R" evil-multiedit-match-symbol-and-prev)
+  ("m" evil-multiedit-match-all)
+  ("M" evil-multiedit-unmark-all)
+  ("s" evil-multiedit-match-and-next)
+  ("S" evil-multiedit-match-and-prev)
+  ("RET" evil-multiedit-toggle-or-restrict-region)
+  ("Q" evil-multiedit-abort :color blue)
+
+  ("q" nil :color blue))
 
 
 ;; Avy
