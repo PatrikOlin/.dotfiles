@@ -180,14 +180,3 @@
     (cons input (apply-partially #'orderless--highlight input)))
   (setq affe-regexp-compiler #'affe-orderless-regexp-compiler))
 
-;; evil-mc: multiple cursors
-(use-package evil-mc
-  :ensure t
-  :init
-  (global-evil-mc-mode 1))
-
-;; evil-multiedit: multiple cursors
-(use-package evil-multiedit
-  :ensure t
-  :init
-  (evil-multiedit-default-keybinds))

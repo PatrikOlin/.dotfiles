@@ -245,3 +245,16 @@ is available."
 ;;   :hook (zig-mode . eglot-ensure)
 ;;   :config
 ;;   (setq zig-format-on-save t))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Gdscript mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package gdscript-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.gd\\'" . gdscript-mode))
+  (add-hook 'gdscript-mode-hook 'gdscript-godot-open-project-in-editor))

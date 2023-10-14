@@ -14,9 +14,10 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(setq evil-want-keybinding nil)
+
 ;; Evil: vi emulation
 (use-package evil
-  :ensure t
   :init
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
@@ -38,7 +39,6 @@
 
 (use-package evil-collection
   :after evil
-  :ensure t
   :config
   (evil-collection-init))
 
@@ -53,6 +53,19 @@
   :ensure t
   :config
   (evil-commentary-mode))
+
+;; evil-mc: multiple cursors
+(use-package evil-mc
+  :ensure t
+  :init
+  (global-evil-mc-mode 1))
+
+;; evil-multiedit: multiple cursors
+(use-package evil-multiedit
+  :ensure t
+  :init
+  ;;(evil-multiedit-default-keybinds)
+  )
 
 (global-unset-key (kbd "C-SPC"))
 ;; General.el
