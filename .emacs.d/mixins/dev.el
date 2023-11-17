@@ -42,7 +42,9 @@
           (css-mode . css-ts-mode)
           (python-mode . python-ts-mode)
           (go-mode . go-ts-mode)
-          (go-mod-mode . go-mod-ts-mode)))
+          (go-mod-mode . go-mod-ts-mode)
+          (elixir-mode . elixir-ts-mode)
+          (rust-mode . rust-ts-mode)))
 
   :hook
   ;; Auto parenthesis matching
@@ -65,7 +67,11 @@
      (toml "https://github.com/tree-sitter/tree-sitter-toml")
      (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+     (astro "https://github.com/virchau13/tree-sitter-astro")
+     (heex "https://github.com/phoenixframework/tree-sitter-heex")
+     (elixir "https://github.com/elixir-lang/tree-sitter-elixir")
+     (rust "https://github.com/tree-sitter/tree-sitter-rust")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -116,9 +122,9 @@
 
   :config
   (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
-  ;; Sometimes you need to tell Eglot where to find the language server
-  ; (add-to-list 'eglot-server-programs
-  ;              '(haskell-mode . ("haskell-language-server-wrapper" "--lsp")))
+  (add-to-list 'eglot-server-programs
+               '(elixir-mode . ("/home/olin/code/elixir-ls/release/language_server.sh"))
+               '(rust-mode . ("/home/olin/.cagro/bin/rust-analyzer")))
   )
 
 
@@ -258,3 +264,46 @@ is available."
   :config
   (add-to-list 'auto-mode-alist '("\\.gd\\'" . gdscript-mode))
   (add-hook 'gdscript-mode-hook 'gdscript-godot-open-project-in-editor))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Astro ts mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package astro-ts-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.astro\\'" . astro-ts-mode)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Elixir ts mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package elixir-mode
+  :ensure t
+  :init  
+  (add-to-list 'auto-mode-alist '("\\.ex") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.exs") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.eex") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.heex") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.leex") 'elixir-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Rust ts mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package rust-mode
+  :ensure t
+  :config
+  (add-hook 'rust-mode-hook
+            (lambda ()
+              (setq indent-tabs-mode nil)
+              (racer-mode)
+              (cargo-minor-mode))))
