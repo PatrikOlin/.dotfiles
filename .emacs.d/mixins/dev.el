@@ -44,7 +44,10 @@
           (go-mode . go-ts-mode)
           (go-mod-mode . go-mod-ts-mode)
           (elixir-mode . elixir-ts-mode)
-          (rust-mode . rust-ts-mode)))
+          (rust-mode . rust-ts-mode)
+          (toml-mode . toml-ts-mode)
+          (gdscript-mode . gdscript-ts-mode)
+          (lua-mode . lua-ts-mode)))
 
   :hook
   ;; Auto parenthesis matching
@@ -71,7 +74,10 @@
      (astro "https://github.com/virchau13/tree-sitter-astro")
      (heex "https://github.com/phoenixframework/tree-sitter-heex")
      (elixir "https://github.com/elixir-lang/tree-sitter-elixir")
-     (rust "https://github.com/tree-sitter/tree-sitter-rust")))
+     (rust "https://github.com/tree-sitter/tree-sitter-rust")
+     (gdscript "https://github.com/PrestonKnopp/tree-sitter-gdscript")
+     (toml "https://github.com/ikatyang/tree-sitter-toml")
+     (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -119,14 +125,27 @@
 
   :custom
   (eglot-send-changes-idle-time 0.1)
+  (eglot-connect-timeout 30)
 
   :config
   (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
+  (setq eglot-events-buffer-size 1000000)
+  (setq eglot-autoshutdown t)
   (add-to-list 'eglot-server-programs
                '(elixir-mode . ("/home/olin/code/elixir-ls/release/language_server.sh"))
-               '(rust-mode . ("/home/olin/.cagro/bin/rust-analyzer")))
+               '(rust-mode . ("/home/olin/.cargo/bin/rust-analyzer")))
   )
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Eglot booster
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+;; (use-package eglot-booster
+;;   :after eglot
+;;   :config (eglot-booster-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -241,20 +260,6 @@ is available."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;   Zig 
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (use-package zig-mode
-;;   :ensure t
-;;   :mode "\\.zig\\'"
-;;   :hook (zig-mode . eglot-ensure)
-;;   :config
-;;   (setq zig-format-on-save t))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
 ;;;   Gdscript mode
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -263,35 +268,10 @@ is available."
   :ensure t
   :config
   (add-to-list 'auto-mode-alist '("\\.gd\\'" . gdscript-mode))
-  (add-hook 'gdscript-mode-hook 'gdscript-godot-open-project-in-editor))
+  (add-to-list 'auto-mode-alist '("\\.tscn\\'" . gdscript-mode)))
 
+(setq gdscript-godot-executable "/run/media/olin/Dundret/Godot/Godot_v4.3-stable_linux.x86_64")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Astro ts mode
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package astro-ts-mode
-  :ensure t
-  :config
-  (add-to-list 'auto-mode-alist '("\\.astro\\'" . astro-ts-mode)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Elixir ts mode
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package elixir-mode
-  :ensure t
-  :init  
-  (add-to-list 'auto-mode-alist '("\\.ex") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.exs") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.eex") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.heex") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.leex") 'elixir-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -307,3 +287,106 @@ is available."
               (setq indent-tabs-mode nil)
               (racer-mode)
               (cargo-minor-mode))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Elixir ts mode
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package elixir-ts-mode
+  :ensure t
+  :init  
+  (add-to-list 'auto-mode-alist '("\\.ex") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.exs") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.eex") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.heex") 'elixir-mode)
+  (add-to-list 'auto-mode-alist '("\\.leex") 'elixir-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Dart and Flutter support
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Dart mode
+(use-package dart-mode
+  :ensure t
+  :hook (dart-mode . eglot-ensure)
+  :config
+  (setq dart-format-on-save t)
+  (add-to-list 'eglot-server-programs
+               '(dart-mode . ("dart" "language-server" "--protocol=lsp"))))
+
+;; Flutter mode
+(use-package flutter
+  :ensure t
+  :after dart-mode
+  :bind (:map dart-mode-map
+              ("C-M-x" . flutter-run-or-hot-reload))
+  :custom
+  (flutter-sdk-path (string-trim (shell-command-to-string "asdf where flutter"))))
+
+;; Treesitter Dart mode
+(use-package dart-ts-mode
+  :straight (:host github :repo "50ways2sayhard/dart-ts-mode")
+  :ensure t)
+
+;; Add Dart to treesit-language-source-alist
+(add-to-list 'treesit-language-source-alist
+             '(dart "https://github.com/UserNobody14/tree-sitter-dart"))
+
+;; Remap dart-mode to dart-ts-mode when available
+(when (treesit-ready-p 'dart)
+  (add-to-list 'major-mode-remap-alist
+               '(dart-mode . dart-ts-mode)))
+
+;; Configure LSP for Dart/Flutter
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '((dart-mode dart-ts-mode) . ("dart" "language-server" "--protocol=lsp"))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Gptel
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (use-package gptel
+;;   :config)
+
+(setq gptel-model "claude-3-5-sonnet-20240620"
+ gptel-backend (gptel-make-anthropic "Claude"
+               :stream t :key (my/get-secret "api-keys/claude")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;   Utility functions
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun generate-mock-uuid ()
+  "Generate a string that looks like a UUID (format: 8-4-4-4-12 hexadecimal digits)."
+  (let ((hex-chars "0123456789abcdef"))
+    (concat 
+     ;; 8 hex digits
+     (mapconcat (lambda (_) (string (aref hex-chars (random 16)))) (make-list 8 nil) "")
+     "-"
+     ;; 4 hex digits
+     (mapconcat (lambda (_) (string (aref hex-chars (random 16)))) (make-list 4 nil) "")
+     "-"
+     ;; 4 hex digits
+     (mapconcat (lambda (_) (string (aref hex-chars (random 16)))) (make-list 4 nil) "")
+     "-"
+     ;; 4 hex digits
+     (mapconcat (lambda (_) (string (aref hex-chars (random 16)))) (make-list 4 nil) "")
+     "-"
+     ;; 12 hex digits
+     (mapconcat (lambda (_) (string (aref hex-chars (random 16)))) (make-list 12 nil) ""))))
+
+(defun insert-mock-uuid ()
+  "Insert a mock UUID at point."
+  (interactive)
+  (insert (generate-mock-uuid)))

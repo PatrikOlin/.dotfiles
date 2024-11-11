@@ -89,6 +89,8 @@
     "pa" '(projectile-add-known-project :which-key "add project")
     "pf" '(projectile-rg :which-key "find in project with ripgrep")
     "ps" '(persp-switch :which-key "switch perspective")
+    "pb" '(persp-ibuffer :which-key "perspective ibuffer")
+    "pk" '(persp-kill :which-key "perspective kill")
     "a" '(:ignore t :which-key "avy")
     "aa" '(avy-goto-char :which-key "goto char")
     "as" '(silver_computing_machine/avy-goto-char :which-key "goto char")'

@@ -25,6 +25,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;;   Color
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'default-frame-alist '(background-color . "#282c34"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;;   Power-ups: Embark and Consult and Perspective
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,3 +188,43 @@
     (cons input (apply-partially #'orderless--highlight input)))
   (setq affe-regexp-compiler #'affe-orderless-regexp-compiler))
 
+;; Ripgrep
+(use-package rg
+  :ensure t
+  :config
+  (rg-enable-default-bindings))
+
+;; wgrep
+(use-package wgrep
+  :ensure t)
+
+;; exec-path-from-shell
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (exec-path-from-shell-initialize))
+
+(setenv "ASDF_DIR" "/opt/asdf-vm")
+
+(require 'exec-path-from-shell)
+(dolist (var '("ASDF_DIR" "PATH"))
+  (add-to-list 'exec-path-from-shell-variables var))
+
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+
+
+;; install auth-source-pass
+(use-package auth-source-pass
+  :ensure t
+  :config
+  (auth-source-pass-enable))
+
+;; Set up custom functions for secret management
+(defun my/get-secret (secret-name)
+  "Retrieve a secret from the password store.
+SECRET-NAME should be the path in pass (e.g., 'api-keys/github')"
+  (let ((secret (auth-source-pass-get 'secret secret-name)))
+    (if secret
+        secret
+      (error "Secret %s not found" secret-name))))
