@@ -275,6 +275,10 @@
 ;; Go language support
 (load-file (expand-file-name "mixins/golang.el" user-emacs-directory))
 
+
+;; Prose writing configuration 
+(load-file (expand-file-name "mixins/writing.el" user-emacs-directory))
+
 ;; Org-mode configuration
 ;; WARNING: need to customize things inside the mixin file before use! See
 ;; the file mixins/org-intro.txt for help.
