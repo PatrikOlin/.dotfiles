@@ -1,31 +1,15 @@
-;;; Silver computing machine
-;;;
-;;; Mixin: Development tools
+(use-package editorconfig
+  :ensure t
+  :config
+  (editorconfig-mode 1))
 
-;;; Usage: Append or require this file from init.el for some software
-;;; development-focused packages.
-;;;
-;;; It is **STRONGLY** recommended that you use the base.el mixin if you want to
-;;; use Eglot. Lots of completion things will work better.
-;;;
-;;; This will try to use tree-sitter modes for many languages. Please run
-;;;
-;;;   M-x treesit-install-language-grammar
-;;;
-;;; Before trying to use a treesit mode.
-
-;;; Contents:
-;;;
-;;;  - Built-in config for developers
-;;;  - Version Control
-;;;  - Common file types
-;;;  - Eglot, the built-in LSP client for Emacs
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Built-in config for developers
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package treesit-auto
+  :ensure t
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
 
 (use-package emacs
   :config
@@ -98,6 +82,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package markdown-mode
+  :ensure t
   :hook ((markdown-mode . visual-line-mode)))
 
 (use-package yaml-mode
@@ -118,31 +103,42 @@
 
 (use-package eglot
   ;; no :ensure t here because it's built-in
-
   ;; Configure hooks to automatically turn-on eglot for selected modes
   :hook
-  (((python-mode ruby-mode elixir-mode js2-mode typescript-mode go-mode css-mode) . eglot))
-
+  (((python-mode ruby-mode elixir-mode js2-mode typescript-mode go-mode go-ts-mode css-mode) . eglot))
   :custom
   (eglot-send-changes-idle-time 0.1)
   (eglot-connect-timeout 30)
-
   :config
   (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
   (setq eglot-events-buffer-size 1000000)
   (setq eglot-autoshutdown t)
-  (add-to-list 'eglot-server-programs
-               '(elixir-mode . ("/home/olin/code/elixir-ls/release/language_server.sh"))
-               '(rust-mode . ("/home/olin/.cargo/bin/rust-analyzer")))
-  )
 
+  ;; Enable all server capabilities
+  (setq eglot-stay-out-of '())
+  (setq eglot-ignored-server-capabilities '())
+
+  (add-to-list 'eglot-server-programs '((elixir-mode elixir-ts-mode) . ("/home/olin/code/elixir-ls/release/language_server.sh")))
+  (add-to-list 'eglot-server-programs '(rust-mode . ("/home/olin/.cargo/bin/rust-analyzer")))
+  (add-to-list 'eglot-server-programs '((go-mode go-ts-mode) . ("/home/olin/.asdf/shims/gopls")))
+
+  ;; Configure gopls explicitly
+  (setq-default eglot-workspace-configuration
+                '((:gopls . ((staticcheck . t)
+                             (buildFlags . ["-tags=integration"])
+                             (matcher . "CaseSensitive")
+                             (analyses . ((unusedparams . t)
+                                          (shadow . t)
+                                          (unusedwrite . t)
+                                          (unusedvariable . t)))))))
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Eglot booster
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
 ;; (use-package eglot-booster
 ;;   :after eglot
 ;;   :config (eglot-booster-mode))
@@ -163,7 +159,7 @@
   (when (file-directory-p "~/code")
     (setq projectile-project-search-path '("~/code")))
   (setq projectile-switch-project-action #'projectile-dired))
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Web-mode
@@ -189,7 +185,7 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Automatically set typescript-mode and start eglot for .ts files 
+;; Automatically set typescript-mode and start eglot for .ts files
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-hook 'typescript-ts-mode 'eglot-ensure)
 
@@ -206,29 +202,32 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;   Copilot
+;;;   Copilot - Need to install from GitHub
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package copilot
-  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
-  :ensure t
-  :hook (prog-mode . copilot-mode)
-  :bind (("C-f" . 'copilot-complete-or-accept)
-         :map copilot-completion-map
-         ("<right>" . 'copilot-accept-completion)
-         ("C-g" . 'copilot-clear-overlay)
-         ("C-S-f" . 'copilot-next-completion)
-         ("C-S-g" . 'copilot-previous-completion)))
- 
-(defun copilot-complete-or-accept ()
-  "Command that either triggers a completion or accepts one if one
-is available."
-  (interactive)
-  (if (copilot--overlay-visible)
-      (progn
-        (copilot-accept-completion))
-    (copilot-complete)))
+;; Clone the repository manually first:
+;; git clone https://github.com/zerolfx/copilot.el ~/.emacs.d/copilot
+
+;; Then add this to load copilot.el from the local directory:
+;;(add-to-list 'load-path "~/.emacs.d/copilot")
+;;(when (file-directory-p "~/.emacs.d/copilot")
+;;  (require 'copilot nil t)
+;;  (add-hook 'prog-mode-hook 'copilot-mode)
+;;  (define-key copilot-mode-map (kbd "C-f") #'copilot-complete-or-accept)
+;;  (define-key copilot-completion-map (kbd "<right>") #'copilot-accept-completion)
+;;  (define-key copilot-completion-map (kbd "C-g") #'copilot-clear-overlay)
+;;  (define-key copilot-completion-map (kbd "C-S-f") #'copilot-next-completion)
+;;  (define-key copilot-completion-map (kbd "C-S-g") #'copilot-previous-completion))
+
+;;(defun copilot-complete-or-accept ()
+;;  "Command that either triggers a completion or accepts one if one
+;;is available."
+;;  (interactive)
+;;  (if (copilot--overlay-visible)
+;;      (progn
+;;        (copilot-accept-completion))
+;;    (copilot-complete)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -247,7 +246,7 @@ is available."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;   Magit 
+;;;   Magit
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -270,24 +269,7 @@ is available."
   (add-to-list 'auto-mode-alist '("\\.gd\\'" . gdscript-mode))
   (add-to-list 'auto-mode-alist '("\\.tscn\\'" . gdscript-mode)))
 
-(setq gdscript-godot-executable "/run/media/olin/Dundret/Godot/Godot_v4.3-stable_linux.x86_64")
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Rust ts mode
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package rust-mode
-  :ensure t
-  :config
-  (add-hook 'rust-mode-hook
-            (lambda ()
-              (setq indent-tabs-mode nil)
-              (racer-mode)
-              (cargo-minor-mode))))
-
+(setq gdscript-godot-executable "/run/media/olin/Dundret/Godot/Godot_v4.4.1-stable_linux.x86_64")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -297,69 +279,12 @@ is available."
 
 (use-package elixir-ts-mode
   :ensure t
-  :init  
-  (add-to-list 'auto-mode-alist '("\\.ex") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.exs") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.eex") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.heex") 'elixir-mode)
-  (add-to-list 'auto-mode-alist '("\\.leex") 'elixir-mode))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Dart and Flutter support
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Dart mode
-(use-package dart-mode
-  :ensure t
-  :hook (dart-mode . eglot-ensure)
-  :config
-  (setq dart-format-on-save t)
-  (add-to-list 'eglot-server-programs
-               '(dart-mode . ("dart" "language-server" "--protocol=lsp"))))
-
-;; Flutter mode
-(use-package flutter
-  :ensure t
-  :after dart-mode
-  :bind (:map dart-mode-map
-              ("C-M-x" . flutter-run-or-hot-reload))
-  :custom
-  (flutter-sdk-path (string-trim (shell-command-to-string "asdf where flutter"))))
-
-;; Treesitter Dart mode
-(use-package dart-ts-mode
-  :straight (:host github :repo "50ways2sayhard/dart-ts-mode")
-  :ensure t)
-
-;; Add Dart to treesit-language-source-alist
-(add-to-list 'treesit-language-source-alist
-             '(dart "https://github.com/UserNobody14/tree-sitter-dart"))
-
-;; Remap dart-mode to dart-ts-mode when available
-(when (treesit-ready-p 'dart)
-  (add-to-list 'major-mode-remap-alist
-               '(dart-mode . dart-ts-mode)))
-
-;; Configure LSP for Dart/Flutter
-(with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs
-               '((dart-mode dart-ts-mode) . ("dart" "language-server" "--protocol=lsp"))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Gptel
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (use-package gptel
-;;   :config)
-
-(setq gptel-model "claude-3-5-sonnet-20240620"
- gptel-backend (gptel-make-anthropic "Claude"
-               :stream t :key (my/get-secret "api-keys/claude")))
+  :init
+  (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.eex\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.heex\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.leex\\'" . elixir-ts-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -370,7 +295,7 @@ is available."
 (defun generate-mock-uuid ()
   "Generate a string that looks like a UUID (format: 8-4-4-4-12 hexadecimal digits)."
   (let ((hex-chars "0123456789abcdef"))
-    (concat 
+    (concat
      ;; 8 hex digits
      (mapconcat (lambda (_) (string (aref hex-chars (random 16)))) (make-list 8 nil) "")
      "-"

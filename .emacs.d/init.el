@@ -1,49 +1,34 @@
-;;;  ________                                                _______                 __                            __
-;;; /        |                                              /       \               /  |                          /  |
-;;; $$$$$$$$/ _____  ____   ______   _______  _______       $$$$$$$  | ______   ____$$ | ______   ______   _______$$ |   __
-;;; $$ |__   /     \/    \ /      \ /       |/       |      $$ |__$$ |/      \ /    $$ |/      \ /      \ /       $$ |  /  |
-;;; $$    |  $$$$$$ $$$$  |$$$$$$  /$$$$$$$//$$$$$$$/       $$    $$</$$$$$$  /$$$$$$$ /$$$$$$  /$$$$$$  /$$$$$$$/$$ |_/$$/
-;;; $$$$$/   $$ | $$ | $$ |/    $$ $$ |     $$      \       $$$$$$$  $$    $$ $$ |  $$ $$ |  $$/$$ |  $$ $$ |     $$   $$<
-;;; $$ |_____$$ | $$ | $$ /$$$$$$$ $$ \_____ $$$$$$  |      $$ |__$$ $$$$$$$$/$$ \__$$ $$ |     $$ \__$$ $$ \_____$$$$$$  \
-;;; $$       $$ | $$ | $$ $$    $$ $$       /     $$/       $$    $$/$$       $$    $$ $$ |     $$    $$/$$       $$ | $$  |
-;;; $$$$$$$$/$$/  $$/  $$/ $$$$$$$/ $$$$$$$/$$$$$$$/        $$$$$$$/  $$$$$$$/ $$$$$$$/$$/       $$$$$$/  $$$$$$$/$$/   $$/
+;; Initialize package system
+(require 'package)
 
-;;; Minimal init.el
+;; Add package archives
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                         ("melpa" . "https://melpa.org/packages/")))
 
-;;; Contents:
-;;;
-;;;  - Basic settings
-;;;  - Discovery aids
-;;;  - Minibuffer/completion settings
-;;;  - Interface enhancements/defaults
-;;;  - Tab-bar configuration
-;;;  - Theme
-;;;  - Optional mixins
-;;;  - Built-in customization framework
+;; Initialize package system
+(package-initialize)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Basic settings
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Refresh package list if needed
+(unless package-archive-contents
+  (package-refresh-contents))
 
-;; Package initialization
-;;
-;; We'll stick to the built-in GNU and non-GNU ELPAs (Emacs Lisp Package
-;; Archive) for the base install, but there are some other ELPAs you could look
-;; at if you want more packages. MELPA in particular is very popular. See
-;; instructions at:
-;;
-;;    https://melpa.org/#/getting-started
-;;
- (with-eval-after-load 'package
-   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
+;; Install use-package if not installed
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
 
-;; If you want to turn off the welcome screen, uncomment this
+;; Configure use-package
+(require 'use-package)
+(setq use-package-always-ensure t)
+
+;; Basic UI settings
 (setq inhibit-splash-screen t)
-
-(setq initial-major-mode 'fundamental-mode)  ; default mode for the *scratch* buffer
-(setq display-time-default-load-average nil) ; this information is useless for most
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(global-display-line-numbers-mode 1)
+(column-number-mode 1)
+(global-visual-line-mode t)
 
 ;; Automatically reread from disk if the underlying file changes
 (setq auto-revert-interval 1)
@@ -53,264 +38,94 @@
 ;; Save history of minibuffer
 (savehist-mode)
 
-;; Move through windows with Ctrl-<arrow keys>
-(windmove-default-keybindings 'control) ; You can use other modifiers here
-
 ;; Fix archaic defaults
 (setq sentence-end-double-space nil)
 
-;; Make right-click do something sensible
+;; Font
 (when (display-graphic-p)
-  (context-menu-mode))
+  (set-frame-font "GoMono Nerd Font Mono 11" nil t))
 
-;; Don't litter file system with *~ backup files; put them all inside
-;; ~/.emacs.d/backup or wherever
-;; (defun bedrock--backup-file-name (fpath)
-;;   "Return a new file path of a given file path.
-;; If the new path's directories does not exist, create them."
-;;   (let* ((backupRootDir "~/.emacs.d/emacs-backup/")
-;;          (filePath (replace-regexp-in-string "[A-Za-z]:" "" fpath )) ; remove Windows driver letter in path
-;;          (backupFilePath (replace-regexp-in-string "//" "/" (concat backupRootDir filePath "~") )))
-;;     (make-directory (file-name-directory backupFilePath) (file-name-directory backupFilePath))
-;;     backupFilePath))
-;; (setq make-backup-file-name-function 'bedrock--backup-file-name)
-(setq backup-directory-alist
-      `((".*" . ,temporary-file-directory)))
-(setq auto-save-file-name-transforms
-      `((".*" ,temporary-file-directory t)))
-
-
-;; Hide toolbar
-(tool-bar-mode -1)
-
-;; Hide menubar
-(menu-bar-mode -1)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Discovery aids
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Show the help buffer after startup
-;(add-hook 'after-init-hook 'help-quick)
-
-;; which-key: shows a popup of available keybindings when typing a long key
-;; sequence (e.g. C-x ...)
-(use-package which-key
+;; Theme
+(use-package doom-themes
   :ensure t
   :config
-  (which-key-mode))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Minibuffer/completion settings
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; For help, see: https://www.masteringemacs.org/article/understanding-minibuffer-completion
-
-(setq enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
-(setq completion-cycle-threshold 1)                  ; TAB cycles candidates
-(setq completions-detailed t)                        ; Show annotations
-(setq tab-always-indent 'complete)                   ; When I hit TAB, try to complete, otherwise, indent
-(setq completion-styles '(basic initials substring)) ; Different styles to match input to candidates
-
-(setq completion-auto-help 'always)                  ; Open completion always; `lazy' another option
-(setq completions-max-height 20)                     ; This is arbitrary
-(setq completions-detailed t)
-(setq completions-format 'one-column)
-(setq completions-group t)
-(setq completion-auto-select 'second-tab)            ; Much more eager
-;(setq completion-auto-select t)                     ; See `C-h v completion-auto-select' for more possible values
-
-(keymap-set minibuffer-mode-map "TAB" 'minibuffer-complete) ; TAB acts more like how it does in the shell
-
-;; For a fancier built-in completion option, try ido-mode or fido-mode. See also
-;; the file mixins/base.el
-;; (fido-vertical-mode)
-;; (setq icomplete-delay-completions-threshold 4000)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Interface enhancements/defaults
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Mode line information
-(setq line-number-mode t)                        ; Show current line in modeline
-(setq column-number-mode t)                      ; Show column as well
-
-(setq x-underline-at-descent-line nil)           ; Prettier underlines
-(setq switch-to-buffer-obey-display-actions t)   ; Make switching buffers more consistent
-
-(setq-default show-trailing-whitespace nil)      ; By default, don't underline trailing spaces
-(setq-default indicate-buffer-boundaries 'left)  ; Show buffer top and bottom in the margin
-
-;; Enable horizontal scrolling
-(setq mouse-wheel-tilt-scroll t)
-(setq mouse-wheel-flip-direction t)
-
-;; We won't set these, but they're good to know about
-;;
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 2)
-
-;; Misc. UI tweaks
-(blink-cursor-mode -1)                                ; Steady cursor
-(pixel-scroll-precision-mode)                         ; Smooth scrolling
-
-;; Use common keystrokes by default
-(cua-mode)
-
-;; Display line numbers in programming mode
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
-(setq-default display-line-numbers-width 3)           ; Set a minimum width
-
-;; Nice line wrapping when working with text
-(add-hook 'text-mode-hook 'visual-line-mode)
-
-;; Modes to highlight the current line with
-(let ((hl-line-hooks '(text-mode-hook prog-mode-hook)))
-  (mapc (lambda (hook) (add-hook hook 'hl-line-mode)) hl-line-hooks))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Tab-bar configuration
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Show the tab-bar as soon as tab-bar functions are invoked
-(setq tab-bar-show 0)
-
-;; Add the time to the tab-bar, if visible
-(add-to-list 'tab-bar-format 'tab-bar-format-align-right 'append)
-(add-to-list 'tab-bar-format 'tab-bar-format-global 'append)
-(setq display-time-format "%a %F %T")
-(setq display-time-interval 1)
-(display-time-mode)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Theme
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (use-package emacs
-;;  :config
-;;  (load-theme 'modus-vivendi))          ; for light theme, use modus-operandi, for dark, modus-vivendi
-
-;; Fonts
-(set-frame-font "GoMono Nerd Font Mono 11" nil t)
-
-;; Doom stuff
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (load-theme 'doom-one t)
+  (doom-themes-visual-bell-config))
 
 ;; Doom modeline
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1))
 
-;; Doom theme
-(use-package doom-themes
+;; Icons
+(use-package all-the-icons
+  :if (display-graphic-p))
+
+;; Which key
+(use-package which-key
   :ensure t
   :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
+  (which-key-mode))
 
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  ;(doom-themes-neotree-config)
-  ;; or for treemacs users
-  ;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-  ;(doom-themes-treemacs-config)
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+;; Evil mode
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)
+  (setq evil-respect-visual-line-mode t)
+  (setq evil-undo-system 'undo-redo)
+  :config
+  (evil-mode 1)
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  ;; Use visual line motions
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  ;; Avy binding
+  (evil-define-key 'normal 'global (kbd "f") 'avy-goto-char-2))
 
-;; Icons
-;; install with M-x all-the-icons-install-fonts
-(use-package all-the-icons
-    :ensure t
-    :if (display-graphic-p))
+;; Evil collection for better evil integration with various modes
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   straight.el 
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Evil surround
+(use-package evil-surround
+  :ensure t
+  :after evil
+  :config
+  (global-evil-surround-mode 1))
 
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+;; Avy for quick navigation
+(use-package avy
+  :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Optional mixins
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Uncomment the (load-file …) lines or copy from the mixin/ files as desired
-
-;; UI/UX enhancements mostly focused on minibuffer and autocompletion interfaces
-;; These ones are *strongly* recommended!
+;; Load additional configuration from mixins if needed
+;; Uncomment these as you confirm they work
 (load-file (expand-file-name "mixins/base.el" user-emacs-directory))
-
-;; Packages for software development
 (load-file (expand-file-name "mixins/dev.el" user-emacs-directory))
-
-;; Vim-bindings in Emacs (evil-mode configuration)
 (load-file (expand-file-name "mixins/vim-like.el" user-emacs-directory))
-
-;; Go language support
-(load-file (expand-file-name "mixins/golang.el" user-emacs-directory))
-
-
-;; Prose writing configuration 
+;; (load-file (expand-file-name "mixins/golang.el" user-emacs-directory))
 (load-file (expand-file-name "mixins/writing.el" user-emacs-directory))
-
-;; Org-mode configuration
-;; WARNING: need to customize things inside the mixin file before use! See
-;; the file mixins/org-intro.txt for help.
 (load-file (expand-file-name "mixins/org.el" user-emacs-directory))
 
-;; Email configuration in Emacs
-;; WARNING: needs the `mu' program installed; see the mixin file for more
-;; details.
-;(load-file (expand-file-name "mixins/email.el" user-emacs-directory))
-
-;; Tools for academic researchers
-;(load-file (expand-file-name "mixins/researcher.el" user-emacs-directory))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;   Built-in customization framework
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; Custom variables set by Emacs
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(eat eglot which-key))
- '(package-vc-selected-packages
-   '((eglot-booster :vc-backend Git :url "https://github.com/jdtsmith/eglot-booster")))
- '(wakatime-cli-path "/home/olin/.wakatime/wakatime-cli"))
+ '(package-selected-packages
+   '(avy evil-surround evil-collection evil which-key all-the-icons doom-modeline doom-themes)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-

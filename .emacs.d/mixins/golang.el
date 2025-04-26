@@ -21,5 +21,5 @@
   (setq gofmt-command "goimports")
   (setq on-save-gofmt t))
 
-(add-hook 'go-ts-mode-hook 'eglot-ensure)
-
+(add-hook 'go-mode-hook 'flymake-mode)
+(add-hook 'go-ts-mode-hook 'flymake-mode)

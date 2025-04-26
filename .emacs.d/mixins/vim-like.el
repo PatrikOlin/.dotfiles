@@ -26,6 +26,7 @@
   (setq evil-respect-visual-line-mode t)
   (setq evil-undo-system 'undo-redo)
   (setq evil-want-keybinding nil)       ; prep to load evil-collection
+  (setq evil-undo-system 'undo-fu)
   :config
   (evil-mode 1)
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
@@ -33,6 +34,8 @@
   ;; Use visual line motions even outside of visual-line-mode buffers
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+  (evil-define-key 'normal 'global (kbd "f") 'avy-goto-char-2)
 
   ;; Configuring initial major mode for some modes
   (evil-set-initial-state 'dashboard-mode 'normal))
@@ -54,11 +57,11 @@
   :config
   (evil-commentary-mode))
 
-;; evil-mc: multiple cursors
-(use-package evil-mc
-  :ensure t
-  :init
-  (global-evil-mc-mode 1))
+;; ;; evil-mc: multiple cursors
+;; (use-package evil-mc
+;;   :ensure t
+;;   :init
+;;   (global-evil-mc-mode 1))
 
 ;; evil-multiedit: multiple cursors
 (use-package evil-multiedit
@@ -82,7 +85,8 @@
 
   (silver_computing_machine/leader-keys
     "f" '(:ignore t :which-key "files")
-    "ff" '(affe-find :which-key "find files")
+    "ff" '(consult-find :which-key "find files")
+    "fg" '(consult-ripgrep :which-key "find text")
     "fr" '(consult-recent :which-key "recent files")
     "p" '(:ignore t :which-key "project")
     "pp" '(projectile-switch-project :which-key "switch project")
@@ -105,6 +109,7 @@
     "la" '(eglot-code-actions :which-key "eglot code actions")
     "lr" '(eglot-rename :which-key "eglot rename")
     "lf" '(eglot-format :which-key "eglot format")
+    "le" '(consult-flymake :which-key "consult flymake")
     "m" '(hydra-multi-cursors/body :which-key "multiple cursors")
     "g" '(hydra-magit/body :which-key "hydra magit")
     ;; "g" '(:ignore t :which-key "magit")
@@ -120,6 +125,7 @@
     "yr" '(avy-copy-region :which-key "avy copy region")
     "yl" '(avy-copy-line :which-key "avy copy line")
     "w" '(:ignore t :which-key "window")
+    "wr" '(hydra-writing/body :which-key "hydra writing")
     "ww" '(other-window :which-key "other window")
     "wq" '(delete-window :which-key "delete window")
     "wk" '(delete-window :which-key "delete window")
@@ -241,9 +247,60 @@ _q_: Quit mc          ^_Q_: Exit multiedit
   ("q" nil :color blue))
 
 
-;; Avy
+;; Hydra for writing
+(defhydra hydra-writing (:hint nil :exit t)
+  "
+  Writing Commands
+  ^Structure^          ^Counts^              ^Modes^                ^Revisions^
+  ^---------^----------^-------^-------------^-----^----------------^---------^
+  _c_: New Chapter     _w_: Count Chapter    _d_: Distraction Free  _r_: Create Revision Entry
+  _s_: Scene Break     _C_: Count Region     _f_: Flyspell          _n_: Add Revision Note
+  _N_: New Note        _t_: Total Count      _o_: Olivetti Mode     _u_: Update Status
+  ^ ^                  ^ ^                   ^ ^                    _W_: Update Word Count
+  "
+  ;; Structure
+  ("c" my/insert-chapter)
+  ("s" my/insert-scene-break)
+  ("N" (lambda () 
+         (interactive)
+         (org-insert-heading)
+         (insert "Note: ")))
+  
+  ;; Counts
+  ("w" my/word-count-chapter)
+  ("C" my/word-count-region)
+  ("t" (lambda ()
+         (interactive)
+         (save-excursion
+           (goto-char (point-min))
+           (my/word-count-region (point-min) (point-max)))))
+  
+  ;; Modes
+  ("d" writeroom-mode)
+  ("f" flyspell-mode)
+  ("o" olivetti-mode)
+  
+  ;; Export
+  ("e" org-export-dispatch)
+  ("p" (lambda () 
+         (interactive)
+         (org-latex-export-to-pdf)))
+  ("x" (lambda ()
+         (interactive)
+         (org-docx-export-to-docx)))
 
-(evil-define-key 'normal 'global (kbd "f") 'avy-goto-char-2)
+  ;; Revisions
+  ("r" my/create-chapter-revision-entry)
+  ("n" my/add-revision-note)
+  ("u" my/update-chapter-status)
+  ("W" my/update-word-count)
+  
+  ;; Exit
+  ("b" nil "back"))
+
+;; Optional: Make the hydra head colors match their function
+(setq hydra-writing/heads-property
+      '((:foreground "pink")))  ; Customize color as desired
 
 ;; Custom Avy function that places the cursor after the search string
 (defun silver_computing_machine/avy-goto-char ()
@@ -251,3 +308,6 @@ _q_: Quit mc          ^_Q_: Exit multiedit
   (interactive)
   (unless (eq (avy-goto-char-timer) t)
     (forward-char (length avy-text))))
+
+
+(use-package undo-fu)

@@ -112,8 +112,8 @@
   :config
   ;; Instead of just two states (TODO, DONE) we set up a few different states
   ;; that a task can be in.
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
+  ;; (setq org-todo-keywords
+  ;;       '((sequence "TODO(t)" "WAITING(w@/!)" "STARTED(s!)" "|" "DONE(d!)" "OBSOLETE(o@)")))
 
   ;; Refile configuration
   (setq org-outline-path-complete-in-steps nil)
@@ -144,6 +144,7 @@
 ;;;   Phase 3: extensions (org-roam, etc.)
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;; (use-package org-roam
 ;;   :ensure t

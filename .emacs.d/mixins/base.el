@@ -54,6 +54,7 @@
          ("M-y" . consult-yank-pop) ; orig. yank-pop
          ("C-s" . consult-line))    ; orig. isearch
   :config
+  (setq consult-ripgrep-args "rg --null --line-buffered --max-columns=1000 --path-separator / --smart-case --no-heading --line-number --with-filename --hidden --no-ignore")
   ;; Narrowing lets you restrict results to certain groups of candidates
   (setq consult-narrow-key "<")
   ;; Set consult buffer source to persp-consult-source
@@ -82,7 +83,8 @@
   (setf (alist-get ?. avy-dispatch-alist) 'bedrock/avy-action-embark))
 
 (use-package embark-consult
-  :ensure t)
+  :ensure t
+  :after (embark consult))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -95,10 +97,7 @@
   :ensure t
   :init
   ;; You'll want to make sure that e.g. fido-mode isn't enabled
-  (vertico-mode))
-
-(use-package vertico-directory
-  :after vertico
+  (vertico-mode)
   :bind (:map vertico-map
               ("M-DEL" . vertico-directory-delete-word)))
 
@@ -119,22 +118,16 @@
   (corfu-auto t)
   (corfu-auto-prefix 3)
   (corfu-auto-delay 0.3)
+  (corfu-popupinfo-delay '(0.25 . 0.1))
+  (corfu-popupinfo-hide nil)
+  :config
+  (corfu-popupinfo-mode)
   :bind
   (:map corfu-map
         ("M-SPC" . corfu-insert-separator)
         ("C-n" . corfu-next)
         ("C-p" . corfu-previous)
         ("S-<return>" . corfu-insert)))
-
-;; Part of corfu
-(use-package corfu-popupinfo
-  :after corfu
-  :hook (corfu-mode . corfu-popupinfo-mode)
-  :custom
-  (corfu-popupinfo-delay '(0.25 . 0.1))
-  (corfu-popupinfo-hide nil)
-  :config
-  (corfu-popupinfo-mode))
 
 ;; Make corfu popup come up in terminal overlay
 (use-package corfu-terminal
@@ -176,17 +169,6 @@
 
 ;; Make copy/paste work with the system clipboard
 (setq x-select-enable-clipboard t)
-
-;; Affe, fuzzy find
-(use-package affe
-  :ensure t
-  :config
-  ;; Manual preview key for `affe-grep'
-  (consult-customize affe-grep :preview-key "M-.")
-  (defun affe-orderless-regexp-compiler (input _type _ignorecase)
-    (setq input (orderless-pattern-compiler input))
-    (cons input (apply-partially #'orderless--highlight input)))
-  (setq affe-regexp-compiler #'affe-orderless-regexp-compiler))
 
 ;; Ripgrep
 (use-package rg
